@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { unlinkSync } from 'fs';
 import { DatabaseService } from './database.service';
 
 describe('DatabaseService', () => {
@@ -18,5 +19,12 @@ describe('DatabaseService', () => {
       const result = await knex.raw('select 1 + 1');
       expect([{ '1 + 1': 2 }]).toEqual(result);
     });
+  });
+
+  afterAll(async () => {
+    databaseService
+      .getConnection()
+      .destroy()
+      .then(() => unlinkSync('./test.sqlite3'));
   });
 });
