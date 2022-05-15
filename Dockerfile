@@ -9,6 +9,8 @@ ADD src /app/src
 ADD test /app/test
 ADD migrations /app/migrations
 
+WORKDIR /app
+
 RUN npm install ; npm run build
 
 ENTRYPOINT npm start
