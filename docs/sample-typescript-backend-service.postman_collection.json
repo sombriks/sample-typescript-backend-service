@@ -1,0 +1,440 @@
+{
+	"info": {
+		"_postman_id": "d3db27d3-779e-491c-87d8-fda4300738b1",
+		"name": "sample-typescript-backend-service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "authentication",
+			"item": [
+				{
+					"name": "get tokens",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const jwtSecret = pm.collectionVariables.get('secret')",
+									"",
+									"const header = {",
+									"\t'typ': 'JWT',",
+									"\t'alg': 'HS256'",
+									"};",
+									"",
+									"const payload = {",
+									"    sub: pm.variables.replaceIn(\"{{$randomUserName}}\"),",
+									"    exp: Math.floor(Date.now() / 1000) + 30",
+									"};",
+									"",
+									"",
+									"function base64url(source) {",
+									"    return CryptoJS.enc.Base64",
+									"        .stringify(source)",
+									"        .replace(/=+$/, '')",
+									"        .replace(/\\+/g, '-')",
+									"        .replace(/\\//g, '_');",
+									"}",
+									"",
+									"const encHeader = base64url(CryptoJS.enc.Utf8.parse(JSON.stringify(header)))",
+									"const encPayload = base64url(CryptoJS.enc.Utf8.parse(JSON.stringify(payload)))",
+									"",
+									"const token = `${encHeader}.${encPayload}`",
+									"const signature = base64url(CryptoJS.HmacSHA256(token, jwtSecret));",
+									"const signedToken = `${token}.${signature}`",
+									"",
+									"pm.collectionVariables.set('generated_jwt_token', signedToken);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// set tokens for future use",
+									"pm.collectionVariables.set('last_auth_token',pm.response.json().accessToken);",
+									"pm.collectionVariables.set('last_refresh_token', pm.response.json().refreshToken);",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"authToken\":\"{{generated_jwt_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/auth",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"auth"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refresh token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// set tokens for future use",
+									"pm.collectionVariables.set('last_auth_token',pm.response.json().accessToken);",
+									"pm.collectionVariables.set('last_refresh_token', pm.response.json().refreshToken);",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{last_refresh_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/refresh",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "new user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"",
+									"let location = pm.response.headers.get(\"Location\")",
+									"if(location) {",
+									"    location = location.replace('/users/','')",
+									"    pm.collectionVariables.set(\"last_user_uuid\", location);",
+									"}",
+									"",
+									"pm.test(\"user is created\", function () {",
+									"    pm.response.to.have.status(201)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{$randomUUID}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/users",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"user was created\", function () {",
+									"    pm.response.to.have.status(200)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/users/{{last_user_uuid}}",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"users",
+								"{{last_user_uuid}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{last_auth_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "payments",
+			"item": [
+				{
+					"name": "new payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"",
+									"let location = pm.response.headers.get(\"Location\")",
+									"if(location) {",
+									"    location = location.replace('/payments/','')",
+									"    pm.collectionVariables.set(\"last_payment_uuid\", location);",
+									"}",
+									"",
+									"pm.test(\"payment is created\", function () {",
+									"    pm.response.to.have.status(201)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{$randomUUID}}\",\n    \"user_id\": \"{{last_user_uuid}}\",\n    \"description\": \"another {{$randomAdjective}} payment!\",\n    \"currency\": \"USD\",\n    \"amount\": \"{{$randomPrice}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/payments",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"payments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"payment was created\", function () {",
+									"    pm.response.to.have.status(200)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/payments/{{last_payment_uuid}}",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"payments",
+								"{{last_payment_uuid}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{last_auth_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseurl",
+			"value": "http://127.0.0.1:3000",
+			"type": "string"
+		},
+		{
+			"key": "last_user_uuid",
+			"value": "0b3befb9-3730-49b3-a243-1c0e4a597e59"
+		},
+		{
+			"key": "last_payment_uuid",
+			"value": "c41c5eaf-2eb5-47dd-b652-55c7f20d71f2"
+		},
+		{
+			"key": "last_refresh_token",
+			"value": "aaa",
+			"type": "string"
+		},
+		{
+			"key": "last_auth_token",
+			"value": "aaa",
+			"type": "string"
+		},
+		{
+			"key": "secret",
+			"value": "ch4ng3-m3",
+			"type": "string"
+		},
+		{
+			"key": "generated_jwt_token",
+			"value": ""
+		}
+	]
+}

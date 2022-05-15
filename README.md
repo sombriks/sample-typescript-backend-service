@@ -4,6 +4,7 @@ Simple service to perform and scale
 
 - Fedora 35 workstation edition
 - Node 14
+- npm 6.14
 - Typescript 4.3
 - Knex 2.0
 
@@ -40,6 +41,12 @@ $ npm run test:cov
 
 ```bash
 npm run new-migrate <migrate_file_name>
+```
+
+## Creating a new nestjs component
+
+```bash
+npx nest --help
 ```
 
 ## Support
