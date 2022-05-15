@@ -6,11 +6,11 @@ exports.up = function (knex) {
   return knex.schema
     .createTable('users', (tableBuilder) => {
       // tableBuilder.increments('id');
-      tableBuilder.uuid('id').unique();
+      tableBuilder.uuid('id').unique().primary();
       tableBuilder.timestamps();
     })
     .createTable('payments', (tableBuilder) => {
-      tableBuilder.uuid('id').unique();
+      tableBuilder.uuid('id').unique().primary();
       tableBuilder
         .uuid('user_id')
         .unique()

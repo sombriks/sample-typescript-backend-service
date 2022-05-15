@@ -2,8 +2,9 @@
 
 Simple service to perform and scale
 
-- node 14
-- typescript 4.3
+- Fedora 35 workstation edition
+- Node 14
+- Typescript 4.3
 - Knex 2.0
 
 ## Installation
