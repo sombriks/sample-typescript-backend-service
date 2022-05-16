@@ -50,10 +50,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
 
-    strategy:
-      matrix:
-        node-version: [14.x]
-
     steps:
     - name: Checkout
       uses: actions/checkout@v3
